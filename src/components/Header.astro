@@ -1,0 +1,45 @@
+---
+interface NavItem {
+  label: string
+  url: string
+}
+
+interface Settings {
+  siteTitle?: string
+  logoText?: string
+  navigation?: NavItem[]
+  headerButtonText?: string
+  headerButtonUrl?: string
+}
+
+interface Props {
+  settings?: Settings | null
+}
+
+const {settings} = Astro.props
+---
+
+<header class="site-header">
+  <div class="container header-inner">
+
+    <a href="/" class="logo">
+      {settings?.logoText || settings?.siteTitle || 'TENDER.'}
+    </a>
+
+    <nav>
+      {settings?.navigation?.map((item) => (
+        <a href={item.url}>{item.label}</a>
+      ))}
+    </nav>
+
+    {settings?.headerButtonText && (
+      <a
+        href={settings.headerButtonUrl || '/contact'}
+        class="header-btn"
+      >
+        {settings.headerButtonText}
+      </a>
+    )}
+
+  </div>
+</header>
