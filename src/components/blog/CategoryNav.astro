@@ -1,0 +1,55 @@
+---
+import {paths} from '../../lib/urls'
+import type {CategoryWithCount} from '../../lib/types'
+
+interface Props {
+  categories: CategoryWithCount[]
+  /** Slug of the category currently being viewed, if any. */
+  activeSlug?: string
+}
+const {categories, activeSlug} = Astro.props
+---
+
+{categories.length > 0 && (
+  <nav class="cat-nav" aria-label="Blog categories">
+    <ul>
+      <li>
+        <a href={paths.blog()} aria-current={!activeSlug ? 'page' : undefined}>All</a>
+      </li>
+      {categories.map((c) => (
+        <li>
+          <a href={paths.category(c.slug)} aria-current={activeSlug === c.slug ? 'page' : undefined}>
+            {c.name}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+)}
+
+<style>
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  a {
+    display: inline-block;
+    padding: 0.45rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    font-size: 0.9rem;
+    background: var(--color-bg);
+  }
+  a:hover {
+    border-color: var(--color-accent);
+  }
+  a[aria-current='page'] {
+    background: var(--color-navy);
+    border-color: var(--color-navy);
+    color: #fff;
+  }
+</style>

@@ -1,0 +1,43 @@
+---
+/**
+ * Shared page shell for blog pages. All <head> SEO output flows through
+ * resolveSeo() (src/lib/seo.ts) so no page writes its own meta tags.
+ */
+import '../styles/global.css'
+import Header from '../components/Header.astro'
+import Footer from '../components/Footer.astro'
+import {getSiteSettings} from '../lib/queries'
+import {resolveSeo, type PageSeo} from '../lib/seo'
+
+interface Props {
+  seo: PageSeo
+}
+
+const {seo} = Astro.props
+const resolved = resolveSeo(seo, Astro.site!)
+const settings = await getSiteSettings()
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{resolved.title}</title>
+    {resolved.description && <meta name="description" content={resolved.description} />}
+    <link rel="canonical" href={resolved.canonical} />
+    <meta name="robots" content={resolved.robots} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="generator" content={Astro.generator} />
+    <slot name="head" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <Header settings={settings} />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer settings={settings} />
+  </body>
+</html>

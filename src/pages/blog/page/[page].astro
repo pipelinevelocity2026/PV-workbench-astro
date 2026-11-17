@@ -1,0 +1,22 @@
+---
+// /blog/page/2/, /blog/page/3/ ... (page 1 lives at /blog/)
+import BlogIndexView from '../../../components/blog/BlogIndexView.astro'
+import {loadBlogIndex} from '../../../lib/blog'
+import {contentKey} from '../../../lib/cache-keys'
+
+export async function getStaticPaths() {
+  const {totalPages} = await loadBlogIndex(1)
+  return Promise.all(
+    Array.from({length: Math.max(0, totalPages - 1)}, async (_, i) => {
+      const page = i + 2
+      const data = await loadBlogIndex(page)
+      return {params: {page: String(page)}, props: {data}, cacheKey: await contentKey(data)}
+    }),
+  )
+}
+
+const page = Number(Astro.params.page)
+const {data} = Astro.props
+---
+
+<BlogIndexView page={page} data={data} />

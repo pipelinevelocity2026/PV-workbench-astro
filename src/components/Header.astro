@@ -17,6 +17,13 @@ interface Props {
 }
 
 const {settings} = Astro.props
+
+// Menu comes from Sanity (Site Settings > Header Navigation). If the editor has
+// not added a Blog item yet, append one so the blog is always reachable.
+// Adding any item pointing at /blog in Sanity takes over (no duplicate).
+const navigation = settings?.navigation ?? []
+const hasBlogLink = navigation.some((item) => /^\/blog\/?$/.test(item.url?.trim() ?? ''))
+const items = hasBlogLink ? navigation : [...navigation, {label: 'Blog', url: '/blog/'}]
 ---
 
 <header class="site-header">
@@ -27,7 +34,7 @@ const {settings} = Astro.props
     </a>
 
     <nav>
-      {settings?.navigation?.map((item) => (
+      {items.map((item) => (
         <a href={item.url}>{item.label}</a>
       ))}
     </nav>

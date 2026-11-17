@@ -1,0 +1,178 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import Breadcrumbs from '../../components/blog/Breadcrumbs.astro'
+import PostMeta from '../../components/blog/PostMeta.astro'
+import SanityImage from '../../components/blog/SanityImage.astro'
+import TableOfContents from '../../components/blog/TableOfContents.astro'
+import AuthorBox from '../../components/blog/AuthorBox.astro'
+import ShareLinks from '../../components/blog/ShareLinks.astro'
+import PostGrid from '../../components/blog/PostGrid.astro'
+import '../../styles/prose.css'
+import {getPostBySlug, getRelatedByCategory, getSiteSettings} from '../../lib/queries'
+import {getPostCacheKeys} from '../../lib/cache-keys'
+import {renderBody} from '../../lib/portableText'
+import {buildTitle} from '../../lib/seo'
+import {absoluteUrl, paths} from '../../lib/urls'
+
+export async function getStaticPaths() {
+  // cacheKey: see lib/cache-keys.ts. Unchanged posts are reused, not re-rendered.
+  const keys = await getPostCacheKeys()
+  return [...keys].map(([slug, cacheKey]) => ({params: {slug}, cacheKey}))
+}
+
+const {slug} = Astro.params
+const post = await getPostBySlug(slug!)
+if (!post) throw new Error(`Post "${slug}" listed by getStaticPaths but not found`)
+
+const site = await getSiteSettings()
+const {html, headings} = renderBody(post.body)
+
+// Editor-chosen related posts first; otherwise newest posts sharing a category.
+const now = Date.now()
+const chosen = (post.relatedPosts ?? []).filter(
+  (p) => p?.slug && p._id !== post._id && new Date(p.publishedAt).getTime() <= now,
+)
+const related = chosen.length > 0 ? chosen : await getRelatedByCategory(post._id, 3)
+
+const path = paths.post(post.slug)
+const url = absoluteUrl(path, Astro.site!)
+const showToc = headings.length >= 3
+---
+
+<BaseLayout
+  seo={{
+    title: buildTitle({seo: post.seo, fallback: post.title, siteName: site?.siteTitle}),
+    description: post.seo?.metaDescription || post.excerpt,
+    path,
+    noindex: Boolean(post.seo?.noIndex),
+    canonicalOverride: post.seo?.canonicalUrl,
+  }}
+>
+  <article class="container article">
+    <Breadcrumbs items={[{name: 'Home', path: '/'}, {name: 'Blog', path: paths.blog()}, {name: post.title}]} />
+
+    <header class="head">
+      <h1>{post.title}</h1>
+      <p class="excerpt">{post.excerpt}</p>
+      <PostMeta publishedAt={post.publishedAt} modifiedAt={post.modifiedAt} author={post.author} showUpdated />
+    </header>
+
+    {post.featuredImage && (
+      <figure class="hero-img">
+        <SanityImage
+          image={post.featuredImage}
+          aspect={16 / 9}
+          widths={[480, 720, 1080, 1440]}
+          sizes="(min-width: 1120px) 1008px, 90vw"
+          priority
+        />
+      </figure>
+    )}
+
+    {showToc && <TableOfContents headings={headings} />}
+
+    <div class="prose" set:html={html} />
+
+    {post.tags && post.tags.length > 0 && (
+      <section class="tags" aria-label="Tags">
+        <ul>{post.tags.map((t) => <li>{t}</li>)}</ul>
+      </section>
+    )}
+
+    {post.categories && post.categories.length > 0 && (
+      <section class="cats" aria-labelledby="cats-heading">
+        <h2 id="cats-heading">Filed under</h2>
+        <ul>
+          {post.categories.map((c) => (
+            <li><a href={paths.category(c.slug)}>{c.name}</a></li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <ShareLinks url={url} title={post.title} />
+
+    {post.author && <AuthorBox author={post.author} />}
+  </article>
+
+  {related.length > 0 && (
+    <section class="container related" aria-labelledby="related-heading">
+      <h2 id="related-heading">Related articles</h2>
+      <PostGrid posts={related} />
+    </section>
+  )}
+</BaseLayout>
+
+<style>
+  .article {
+    padding: 1.5rem 0 3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  .head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    max-width: 72ch;
+  }
+  h1 {
+    margin: 0;
+    font-size: clamp(2rem, 5vw, 3rem);
+    line-height: 1.15;
+  }
+  .excerpt {
+    margin: 0;
+    font-size: 1.2rem;
+    color: var(--color-muted);
+  }
+  .hero-img {
+    margin: 0;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--color-surface);
+  }
+  .hero-img :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .tags li {
+    font-size: 0.85rem;
+    padding: 0.25rem 0.7rem;
+    background: var(--color-surface);
+    border-radius: 999px;
+  }
+  .tags li::before {
+    content: '#';
+  }
+  .cats h2 {
+    font-size: 1rem;
+    margin: 0 0 0.6rem;
+  }
+  .cats a {
+    display: inline-block;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    font-size: 0.9rem;
+  }
+  .cats a:hover {
+    border-color: var(--color-accent);
+  }
+  .related {
+    padding-bottom: 4rem;
+  }
+  .related h2 {
+    margin: 0 0 1.25rem;
+  }
+</style>

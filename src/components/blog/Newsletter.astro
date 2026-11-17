@@ -1,0 +1,51 @@
+---
+interface Props {
+  heading?: string | null
+  /** Email provider endpoint from Blog Settings. The form renders only if set. */
+  action?: string | null
+}
+const {heading, action} = Astro.props
+---
+
+{action && (
+  <section class="newsletter" aria-labelledby="newsletter-heading">
+    <h2 id="newsletter-heading">{heading || 'Subscribe to our newsletter'}</h2>
+    <form method="post" action={action}>
+      <label class="visually-hidden" for="newsletter-email">Email address</label>
+      <input id="newsletter-email" type="email" name="email" placeholder="you@example.com" autocomplete="email" required />
+      <button type="submit" class="primary-btn">Subscribe</button>
+    </form>
+  </section>
+)}
+
+<style>
+  .newsletter {
+    background: var(--color-navy);
+    color: #fff;
+    border-radius: var(--radius);
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+  }
+  h2 {
+    margin: 0 0 1.25rem;
+  }
+  form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    justify-content: center;
+  }
+  input {
+    flex: 1 1 240px;
+    max-width: 360px;
+    padding: 0.8rem 1rem;
+    border-radius: 6px;
+    border: 0;
+    font: inherit;
+  }
+  button {
+    border: 0;
+    cursor: pointer;
+    font: inherit;
+  }
+</style>

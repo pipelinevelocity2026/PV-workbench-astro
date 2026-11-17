@@ -12,6 +12,7 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@portabletext/to-html": "^6.0.0",
     "@sanity/client": "^8.16.0",
     "astro": "^7.4.11",
     "tailwindcss": "^4.3.5"

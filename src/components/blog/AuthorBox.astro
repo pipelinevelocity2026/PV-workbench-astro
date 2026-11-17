@@ -1,0 +1,73 @@
+---
+import SanityImage from './SanityImage.astro'
+import {paths} from '../../lib/urls'
+import type {SanityImageData} from '../../lib/types'
+
+interface Props {
+  author: {
+    name: string
+    slug: string
+    designation?: string | null
+    bio?: string | null
+    image?: SanityImageData | null
+  }
+  /** Compact = name + role only. */
+  compact?: boolean
+}
+const {author, compact = false} = Astro.props
+---
+
+<aside class="author" aria-label="About the author">
+  {author.image?.url && (
+    <SanityImage
+      image={author.image}
+      alt=""
+      aspect={1}
+      widths={[96, 160]}
+      sizes="72px"
+      class="avatar"
+    />
+  )}
+  <div>
+    <p class="name">
+      <a href={paths.author(author.slug)} rel="author">{author.name}</a>
+    </p>
+    {author.designation && <p class="role">{author.designation}</p>}
+    {!compact && author.bio && <p class="bio">{author.bio}</p>}
+  </div>
+</aside>
+
+<style>
+  .author {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    padding: 1.25rem;
+    background: var(--color-surface);
+    border-radius: var(--radius);
+  }
+  .author :global(.avatar) {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex: none;
+  }
+  p {
+    margin: 0;
+  }
+  .name {
+    font-weight: 700;
+  }
+  .name a:hover {
+    text-decoration: underline;
+  }
+  .role {
+    font-size: 0.9rem;
+    color: var(--color-muted);
+  }
+  .bio {
+    margin-top: 0.5rem;
+    font-size: 0.95rem;
+  }
+</style>

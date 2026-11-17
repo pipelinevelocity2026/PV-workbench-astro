@@ -1,0 +1,21 @@
+name = "sanity-build-webhook"
+main = "worker.mjs"
+compatibility_date = "2026-11-01"
+
+[vars]
+SANITY_PROJECT_ID = "0huhxxkr"
+SANITY_DATASET = "production"
+
+# Hourly: build if a scheduled post has just gone live (no Sanity event fires for that).
+[triggers]
+crons = ["17 * * * *"]
+
+# Optional but recommended: remembers Sanity's idempotency keys.
+# Create with: npx wrangler kv namespace create DEDUPE   then paste the id:
+# [[kv_namespaces]]
+# binding = "DEDUPE"
+# id = "<kv-namespace-id>"
+
+# Secrets (NOT stored here):
+#   npx wrangler secret put SANITY_WEBHOOK_SECRET
+#   npx wrangler secret put CF_DEPLOY_HOOK_URL

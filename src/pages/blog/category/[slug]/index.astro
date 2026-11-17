@@ -1,0 +1,23 @@
+---
+import ArchiveView from '../../../../components/blog/ArchiveView.astro'
+import {archivePaths, loadCategoryArchive} from '../../../../lib/blog'
+import {contentKey} from '../../../../lib/cache-keys'
+
+export async function getStaticPaths() {
+  const all = await archivePaths('category')
+  return Promise.all(
+    all
+      .filter((p) => p.page === 1)
+      .map(async ({slug}) => {
+        // Load once here: the same data is the page's props AND its cacheKey.
+        const data = await loadCategoryArchive(slug, 1)
+        return {params: {slug}, props: {data}, cacheKey: await contentKey(data)}
+      }),
+  )
+}
+
+const {data} = Astro.props
+if (!data) throw new Error(`Category "${Astro.params.slug}" not found`)
+---
+
+<ArchiveView kind="category" page={1} {...data} />

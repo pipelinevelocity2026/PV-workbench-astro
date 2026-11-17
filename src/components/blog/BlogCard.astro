@@ -1,0 +1,95 @@
+---
+import SanityImage from './SanityImage.astro'
+import PostMeta from './PostMeta.astro'
+import {paths} from '../../lib/urls'
+import type {PostCard} from '../../lib/types'
+
+interface Props {
+  post: PostCard
+  /** Heading level of the title; use 3 under an <h2> section. */
+  headingLevel?: 2 | 3
+  /** Mark the first above-the-fold card image for faster LCP. */
+  priority?: boolean
+}
+const {post, headingLevel = 3, priority = false} = Astro.props
+const Heading = `h${headingLevel}` as 'h2' | 'h3'
+const primary = post.categories?.[0]
+---
+
+<article class="card">
+  {post.featuredImage && (
+    <a href={paths.post(post.slug)} tabindex="-1" aria-hidden="true" class="thumb">
+      <SanityImage
+        image={post.featuredImage}
+        aspect={16 / 9}
+        sizes="(min-width: 900px) 360px, (min-width: 600px) 45vw, 100vw"
+        priority={priority}
+      />
+    </a>
+  )}
+  <div class="body">
+    {primary && (
+      <a class="cat" href={paths.category(primary.slug)}>{primary.name}</a>
+    )}
+    <Heading><a href={paths.post(post.slug)}>{post.title}</a></Heading>
+    <p class="excerpt">{post.excerpt}</p>
+    <PostMeta publishedAt={post.publishedAt} author={post.author} />
+  </div>
+</article>
+
+<style>
+  .card {
+    display: flex;
+    flex-direction: column;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    height: 100%;
+  }
+  .thumb {
+    display: block;
+    aspect-ratio: 16 / 9;
+    background: var(--color-surface);
+  }
+  .thumb :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 1.1rem 1.25rem 1.25rem;
+    flex: 1;
+  }
+  .cat {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-accent-dark);
+  }
+  h2,
+  h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    line-height: 1.3;
+  }
+  h2 a:hover,
+  h3 a:hover {
+    color: var(--color-accent-dark);
+    text-decoration: underline;
+  }
+  .excerpt {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 0.95rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>

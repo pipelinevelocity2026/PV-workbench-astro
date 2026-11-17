@@ -1,0 +1,43 @@
+---
+import {formatDate, hasMeaningfulUpdate} from '../../lib/format'
+import {paths} from '../../lib/urls'
+import type {AuthorRef} from '../../lib/types'
+
+interface Props {
+  publishedAt: string
+  modifiedAt?: string | null
+  author?: AuthorRef | null
+  /** Show the "Updated" date (article page) */
+  showUpdated?: boolean
+}
+const {publishedAt, modifiedAt, author, showUpdated = false} = Astro.props
+---
+
+<p class="meta">
+  {author && (
+    <span>
+      By <a href={paths.author(author.slug)} rel="author">{author.name}</a>
+    </span>
+  )}
+  <span>
+    <span class="visually-hidden">Published </span><time datetime={publishedAt}>{formatDate(publishedAt)}</time>
+  </span>
+  {showUpdated && hasMeaningfulUpdate(publishedAt, modifiedAt) && (
+    <span>Updated <time datetime={modifiedAt!}>{formatDate(modifiedAt!)}</time></span>
+  )}
+</p>
+
+<style>
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--color-muted);
+  }
+  .meta a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+</style>

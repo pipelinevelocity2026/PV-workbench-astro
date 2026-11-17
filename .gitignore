@@ -22,3 +22,7 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# incremental-build tooling
+webhook/node_modules/
+scripts/incremental-test/last-run.json

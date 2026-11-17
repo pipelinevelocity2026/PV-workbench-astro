@@ -1,0 +1,84 @@
+---
+import {paginationRange} from '../../lib/format'
+
+interface Props {
+  current: number
+  total: number
+  /** Builds the URL for a page number, e.g. paths.blogPage */
+  href: (page: number) => string
+}
+const {current, total, href} = Astro.props
+const range = paginationRange(current, total)
+---
+
+{total > 1 && (
+  <nav class="pagination" aria-label="Pagination">
+    <ul>
+      <li>
+        {current > 1 ? (
+          <a href={href(current - 1)} rel="prev">← Previous</a>
+        ) : (
+          <span class="disabled" aria-hidden="true">← Previous</span>
+        )}
+      </li>
+      {range.map((item) => (
+        <li>
+          {item === '…' ? (
+            <span class="gap" aria-hidden="true">…</span>
+          ) : (
+            <a
+              href={href(item)}
+              aria-current={item === current ? 'page' : undefined}
+              aria-label={`Page ${item}`}
+            >{item}</a>
+          )}
+        </li>
+      ))}
+      <li>
+        {current < total ? (
+          <a href={href(current + 1)} rel="next">Next →</a>
+        ) : (
+          <span class="disabled" aria-hidden="true">Next →</span>
+        )}
+      </li>
+    </ul>
+  </nav>
+)}
+
+<style>
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  a,
+  span {
+    display: inline-block;
+    min-width: 2.5rem;
+    padding: 0.5rem 0.8rem;
+    text-align: center;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    font-size: 0.95rem;
+  }
+  a:hover {
+    border-color: var(--color-accent);
+  }
+  a[aria-current='page'] {
+    background: var(--color-navy);
+    border-color: var(--color-navy);
+    color: #fff;
+  }
+  .disabled {
+    color: var(--color-muted);
+    opacity: 0.5;
+  }
+  .gap {
+    border: 0;
+    min-width: 0;
+  }
+</style>

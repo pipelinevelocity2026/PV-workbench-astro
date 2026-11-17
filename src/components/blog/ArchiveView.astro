@@ -1,0 +1,116 @@
+---
+/** Shared view for category and author archives (page 1 and N). */
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import Breadcrumbs from './Breadcrumbs.astro'
+import CategoryNav from './CategoryNav.astro'
+import AuthorBox from './AuthorBox.astro'
+import PostGrid from './PostGrid.astro'
+import Pagination from './Pagination.astro'
+import SanityImage from './SanityImage.astro'
+import {getSiteSettings} from '../../lib/queries'
+import {archiveIsIndexable, buildTitle} from '../../lib/seo'
+import {paths} from '../../lib/urls'
+import type {Author, Category, CategoryWithCount, PostCard} from '../../lib/types'
+
+interface Props {
+  kind: 'category' | 'author'
+  entity: Category | Author
+  posts: PostCard[]
+  page: number
+  totalPages: number
+  /** Only for category archives. */
+  categories?: CategoryWithCount[]
+}
+const {kind, entity, posts, page, totalPages, categories = []} = Astro.props
+const site = await getSiteSettings()
+
+const href = (p: number) => (kind === 'category' ? paths.category(entity.slug, p) : paths.author(entity.slug, p))
+const description =
+  entity.seo?.metaDescription ||
+  (kind === 'category' ? (entity as Category).description : (entity as Author).bio) ||
+  undefined
+const fallbackTitle = kind === 'category' ? `${entity.name} articles` : `Articles by ${entity.name}`
+const first = page === 1
+const crumbs = [
+  {name: 'Home', path: '/'},
+  {name: 'Blog', path: paths.blog()},
+  {name: entity.name, path: href(1)},
+  ...(first ? [] : [{name: `Page ${page}`}]),
+]
+const image = kind === 'category' ? (entity as Category).image : null
+---
+
+<BaseLayout
+  seo={{
+    title: buildTitle({seo: entity.seo, fallback: fallbackTitle, siteName: site?.siteTitle, page}),
+    description,
+    path: href(page),
+    // Thin archives (few posts) are noindex,follow. Paginated pages stay indexable.
+    noindex: !archiveIsIndexable(entity.postCount, entity.seo),
+    canonicalOverride: first ? entity.seo?.canonicalUrl : null,
+  }}
+>
+  <div class="container wrap">
+    <Breadcrumbs items={crumbs} />
+
+    <header class="hero">
+      {image?.url && (
+        <SanityImage image={image} alt="" aspect={16 / 9} widths={[480, 800]} sizes="(min-width: 900px) 360px, 100vw" priority class="cover" />
+      )}
+      <h1>
+        {kind === 'category' ? entity.name : `Articles by ${entity.name}`}
+        {!first && <span class="pg"> – Page {page}</span>}
+      </h1>
+      {kind === 'category' && first && (entity as Category).description && (
+        <p>{(entity as Category).description}</p>
+      )}
+    </header>
+
+    {kind === 'author' && first && <AuthorBox author={entity as Author} />}
+    {kind === 'category' && <CategoryNav categories={categories} activeSlug={entity.slug} />}
+
+    <section class="block" aria-labelledby="list-heading">
+      <h2 id="list-heading" class="visually-hidden">Articles</h2>
+      <PostGrid posts={posts} priorityCount={3} emptyMessage="No articles in this section yet." />
+      <div class="pager">
+        <Pagination current={page} total={totalPages} href={href} />
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .wrap {
+    padding: 1.5rem 0 4rem;
+  }
+  .hero {
+    padding: 2rem 0 1.5rem;
+  }
+  .hero :global(.cover) {
+    width: 100%;
+    max-width: 360px;
+    border-radius: var(--radius);
+    margin-bottom: 1rem;
+  }
+  h1 {
+    margin: 0;
+    font-size: clamp(1.9rem, 4.5vw, 3rem);
+    line-height: 1.15;
+  }
+  .pg {
+    color: var(--color-muted);
+    font-weight: 500;
+  }
+  .hero p {
+    margin: 0.75rem 0 0;
+    max-width: 60ch;
+    font-size: 1.1rem;
+    color: var(--color-muted);
+  }
+  .block {
+    margin-top: 2rem;
+  }
+  .pager {
+    margin-top: 2.5rem;
+  }
+</style>
