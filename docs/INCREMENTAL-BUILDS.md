@@ -54,7 +54,11 @@ The API may change in a minor release, and a bug in dependency hashing would ser
 
 ## 3. Webhook
 
-**Current setup (recommended, nothing to deploy):** the Sanity webhook posts straight to the Cloudflare deploy hook, so a build starts only when something is published. Optionally add the filter below to the existing webhook in Sanity to skip publishes of documents the site never renders. Known gap: a scheduled post (future `publishedAt`) has no event when its date arrives, so it appears at the next build.
+**Current setup: manual "Publish site" (Studio tool).** Publishing documents in Sanity does NOT build the site. When editors are done, they open the **Publish site** tool in the Studio and click the button once. It writes a `siteBuild` document (studio/tools/publishSite.tsx); a Sanity webhook filtered to that document calls the Cloudflare deploy hook. The hook URL lives only in the Sanity webhook settings (never in Studio code); who can build is controlled by Sanity write permissions. The tool also shows how many published changes are waiting.
+
+Sanity webhook settings for this: Dataset production · Trigger on Create + Update (Delete off) · Filter `_type == "siteBuild"` · Drafts off · POST · URL = the Cloudflare deploy hook. Scheduled posts go live at the next button click after their date.
+
+The filter below and the Worker are the older automatic alternative and are not needed with the button.
 
 **Optional extra (`webhook/` folder, not required):** a Worker that adds signature verification, dedupe, an hourly cron for scheduled posts, and the same relevance rules. Deploy it only if scheduled posts or the extra hardening matter.
 
